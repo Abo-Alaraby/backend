@@ -10,6 +10,8 @@ const Cart = require('./Database/Models/cart-model');
 
 const Order = require('./Database/Models/order-model');
 
+const Admin = require('./Database/Models/admin-model');
+
 const app = express();
 
 app.use(express.json());

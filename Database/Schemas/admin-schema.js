@@ -2,26 +2,7 @@ const mongoose = require('mongoose');
 
 const schema = mongoose.Schema;
 
-const addressSchema = new schema({
-    country: {
-        type: String,
-        required: true
-    },
-    city: {
-        type: String,
-        required: true
-    },
-    street: {
-        type: String,
-        required: true
-    },
-    houseNumber: {
-        type: Number,
-        required: true
-    }
-});
-
-const userSchema = new schema({
+const adminSchema = new schema({
     email: {
         type: String,
         required: true,
@@ -44,15 +25,12 @@ const userSchema = new schema({
         //also to handle international codes and leading zeroes implicitly
         type: String,
         required: true
-    },
-    address: {
-        type: addressSchema
-    },
+    }
   },
 
   {timestamps: true}
 
 );
 
-module.exports = userSchema;
+module.exports = adminSchema;
 
