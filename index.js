@@ -2,6 +2,8 @@ const express = require("express");
 
 const mongoose = require("mongoose");
 
+const cors = require("cors");
+
 const Product = require("./Database/Models/product-model");
 
 const Cart = require("./Database/Models/cart-model");
