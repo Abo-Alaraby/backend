@@ -1,0 +1,25 @@
+const mongoose = require('mongoose');
+
+const schema = mongoose.Schema;
+
+const productSchema = require('./product-schema');
+
+const orderSchema = new schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    products: {
+        type: [productSchema],
+    },
+    total: {
+        type: Number
+    },
+    status: {
+        type: String,
+        enum: ['Canceled', 'In progress', 'Out for delivery', 'Completed'],
+        default: 'In progress'
+    }
+});
+
+module.exports = orderSchema;
