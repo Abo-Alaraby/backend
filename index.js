@@ -14,7 +14,9 @@ const cookieParser = require("cookie-parser");
 
 const app = express();
 
-const { login, signupUser } = require("./APIs/User-Service/auth");
+const { login, signupUser, authenticate, authorizeAdmin } = require("./APIs/User-Service/auth");
+
+const { createProduct, viewProduct, removeProduct, changeProduct, addProductToCart, searchProducts } = require("./APIs/Product-Service/product-controller");
 
 app.use(
   cors({
@@ -33,5 +35,17 @@ mongoose
 app.post("/user/login", login);
 
 app.post("/user/signup", signupUser);
+
+app.post("/product/create", authenticate, authorizeAdmin, createProduct);
+
+app.get("/product/:id", viewProduct);
+
+app.delete("/product/:id", authenticate, authorizeAdmin, removeProduct);
+
+app.patch("/product/:id", authenticate, authorizeAdmin, changeProduct);
+
+app.patch("/cart/:cartId/product/:productId", authenticate, addProductToCart);
+
+app.get("/products/search", searchProducts);
 
 app.listen(3000);

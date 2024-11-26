@@ -10,6 +10,33 @@ require('dotenv').config();
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
+// Middleware to authenticate and authorize
+async function authenticate(req, res, next) {
+    const token = req.cookies.jwt || req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+        return res.status(401).json({ message: "Access denied. No token provided." });
+    }
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+
+        // Attach user data to the request for later use
+        req.user = decoded;
+
+        next(); // Proceed to the next middleware or route handler
+    } catch (error) {
+        return res.status(403).json({ message: "Invalid or expired token." });
+    }
+}
+
+function authorizeAdmin(req, res, next) {
+    if (req.user?.role !== "admin") {
+        return res.status(403).json({ message: "Access denied. Admins only." });
+    }
+    next();
+}
+
 async function generateToken(id, name, email){
 
     const token = jwt.sign(
@@ -135,4 +162,4 @@ async function signupUser(req, res){
 
 }
 
-module.exports = {login, signupUser};
+module.exports = {login, signupUser, authenticate, authorizeAdmin};
