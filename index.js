@@ -18,7 +18,7 @@ const { login, signupUser, authenticate, authorizeAdmin } = require("./APIs/User
 
 const { createProduct, viewProduct, removeProduct, changeProduct, addProductToCart, searchProducts } = require("./APIs/Product-Service/product-controller");
 
-const {placeOrder, cancelOrder} = require('./APIs/Order-Service/order-controller')
+const {placeOrder, cancelOrder, viewOrder, getStatus, completeDelivery} = require('./APIs/Order-Service/order-controller')
 
 app.use(
   cors({
@@ -53,5 +53,12 @@ app.get("/products/search", searchProducts);
 app.post('/order', authenticate, placeOrder);
 
 app.delete('/order/:id', authenticate, cancelOrder);
+
+app.get('/order/:id', authenticate, viewOrder);
+
+//I think this should be removed, it is redundant
+app.get('/order/:id/status', authenticate, getStatus);
+
+app.patch('/order/:id', authenticate, completeDelivery);
 
 app.listen(3000);

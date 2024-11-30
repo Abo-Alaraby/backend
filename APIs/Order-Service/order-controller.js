@@ -1,5 +1,13 @@
 const Order = require('../../Database/Models/order-model');
 
+
+//Will use it to update inventory later
+async function updateInventory(orderId) {
+
+
+}
+
+
 async function placeOrder(req, res) {
 
     const user = req.user;
@@ -89,4 +97,77 @@ async function cancelOrder(req, res) {
     }
 }
 
-module.exports = {cancelOrder, placeOrder};
+//GET
+async function viewOrder(req, res) {
+
+    const orderId = req.params.id;
+
+    const userId = req.user.id;
+
+    try{
+
+        const order = await Order.findById(orderId);
+
+        if(!order || !order.user.equals(userId))
+            throw new Error('This order doesn\'t exist');
+
+        return res.status(200).json(order);
+
+    }catch(error){
+
+        return res.status(400).json(error.message);
+    }
+}
+
+//GET
+async function getStatus(req, res) {
+
+    const orderId = req.params.id;
+
+    const userId = req.user.id;
+
+    try{
+
+        const order = await Order.findById(orderId);
+
+        if(!order || !order.user.equals(userId))
+            throw new Error('This order doesn\'t exist');
+
+        return res.status(200).json(order.status);
+
+    }catch(error){
+
+        return res.status(400).json(error.message);
+    }
+
+}
+
+//PATCH
+async function completeDelivery(req, res){
+
+    const orderId = req.params.id;
+
+    const userId = req.user.id;
+
+    try{
+
+        const order = await Order.findById(orderId);
+
+        //The user cannot access this order
+        if(!order || !order.user.equals(userId))
+            throw new Error('This order doesn\'t exist');
+
+        order.status = 'Completed';
+
+        await order.save();
+
+        return res.status(201).json(order);
+
+    }catch(error){
+
+        return res.status(400).json(error.message);
+    }
+
+}
+
+module.exports = {cancelOrder, placeOrder, viewOrder, getStatus, completeDelivery};
