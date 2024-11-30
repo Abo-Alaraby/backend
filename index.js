@@ -18,6 +18,8 @@ const { login, signupUser, authenticate, authorizeAdmin } = require("./APIs/User
 
 const { createProduct, viewProduct, removeProduct, changeProduct, addProductToCart, searchProducts } = require("./APIs/Product-Service/product-controller");
 
+const {placeOrder, cancelOrder} = require('./APIs/Order-Service/order-controller')
+
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -47,5 +49,9 @@ app.patch("/product/:id", authenticate, authorizeAdmin, changeProduct);
 app.patch("/cart/:cartId/product/:productId", authenticate, addProductToCart);
 
 app.get("/products/search", searchProducts);
+
+app.post('/order', authenticate, placeOrder);
+
+app.delete('/order/:id', authenticate, cancelOrder);
 
 app.listen(3000);
