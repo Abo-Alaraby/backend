@@ -18,7 +18,8 @@ const { login, signupUser, authenticate, authorizeAdmin } = require("./APIs/User
 
 const { createProduct, viewProduct, removeProduct, changeProduct, addProductToCart, searchProducts } = require("./APIs/Product-Service/product-controller");
 
-const {placeOrder, cancelOrder, viewOrder, getStatus, completeDelivery} = require('./APIs/Order-Service/order-controller')
+const {placeOrder, cancelOrder, viewOrder, getStatus, completeDelivery} = require('./APIs/Order-Service/order-controller');
+const { viewCart, clearCart, removeProductFromCart } = require("./APIs/Cart-Service/cart-controller");
 
 app.use(
   cors({
@@ -60,5 +61,11 @@ app.get('/order/:id', authenticate, viewOrder);
 app.get('/order/:id/status', authenticate, getStatus);
 
 app.patch('/order/:id', authenticate, completeDelivery);
+
+app.get('/cart/:id', authenticate, viewCart);
+
+app.delete('/cart/:id/product/:productId', authenticate, removeProductFromCart);
+
+app.delete('/cart/:id', authenticate, clearCart);
 
 app.listen(3000);
