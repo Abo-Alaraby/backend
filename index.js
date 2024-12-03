@@ -27,6 +27,7 @@ const {
 
 const {placeOrder, cancelOrder, viewOrder, getStatus, completeDelivery} = require('./APIs/Order-Service/order-controller');
 const { viewCart, clearCart, removeProductFromCart } = require("./APIs/Cart-Service/cart-controller");
+const { sendEmail } = require("./APIs/Notification-Service/mail");
 
 app.use(
   cors({
@@ -74,5 +75,7 @@ app.get('/cart/:id', authenticate, viewCart);
 app.delete('/cart/:id/product/:productId', authenticate, removeProductFromCart);
 
 app.delete('/cart/:id', authenticate, clearCart);
+
+app.post('/email', sendEmail);
 
 app.listen(3000);
