@@ -16,7 +16,14 @@ const app = express();
 
 const { login, signupUser, authenticate, authorizeAdmin } = require("./APIs/User-Service/auth");
 
-const { createProduct, viewProduct, removeProduct, changeProduct, addProductToCart, searchProducts } = require("./APIs/Product-Service/product-controller");
+const {
+  createProduct,
+  viewProduct,
+  removeProduct,
+  changeProduct,
+  addProductToCart,
+  searchProducts,
+} = require("./APIs/Product-Service/product-controller");
 
 const {placeOrder, cancelOrder, viewOrder, getStatus, completeDelivery} = require('./APIs/Order-Service/order-controller');
 const { viewCart, clearCart, removeProductFromCart } = require("./APIs/Cart-Service/cart-controller");
