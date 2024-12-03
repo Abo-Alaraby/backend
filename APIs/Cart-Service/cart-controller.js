@@ -1,5 +1,6 @@
 const Cart = require('../../Database/Models/cart-model');
 
+const Product = require('../../Database/Models/product-model');
 
 async function viewCart(req, res){
 
@@ -26,6 +27,8 @@ async function removeProductFromCart(req, res){
 
     const cartId = req.params.id;
 
+    const productId = req.params.productId;
+
     try {
 
         const userId = req.user.id;
@@ -35,14 +38,30 @@ async function removeProductFromCart(req, res){
         if(!cartId || !cart.user.equals(userId))
             throw new Error('This cart doesn\'t exist');
 
-        const productId = req.params.productId;
+        const product = await Product.findById(productId);
 
-        if(!productId)
+        if(!productId || !product)
             throw new Error('This product doesn\'t exist');
 
-        const newProductsAfterRemoval = cart.products.filter(product => !productId.equals(product._id));
+        let found = false;
+        const newProductsAfterRemoval = cart.products.filter(item => {
+            if(item.product.equals(productId)){
+                found = true;
+                if(item.quantity == 1)
+                    return false;
+                item.quantity--;
+            }
+            return true;
+        });
+
+        if(!found)
+            throw new Error('This product does not exist in the cart');
 
         cart.products = newProductsAfterRemoval;
+
+        cart.total -= product.price;
+
+        cart.markModified('products');
 
         await cart.save();
 
@@ -69,6 +88,8 @@ async function clearCart(req, res){
             throw new Error('This cart doesn\'t exist');
 
         cart.products = [];
+
+        cart.total = 0;
 
         await cart.save();
 

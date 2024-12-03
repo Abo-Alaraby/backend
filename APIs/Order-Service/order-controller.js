@@ -1,5 +1,6 @@
 const Order = require('../../Database/Models/order-model');
 
+const Product = require('../../Database/Models/product-model');
 
 //Will use it to update inventory later
 async function updateInventory(orderId) {
@@ -18,41 +19,41 @@ async function placeOrder(req, res) {
         if(!user)
             throw new Error('Please login to place an order');
 
-        const {products} = req.body;
+        const {items} = req.body;
 
-        if(products.length == 0)
+        if(items.length == 0)
             throw new Error('Please add products to your cart first');
-
+        
         let total = 0;
 
-        const outOfStockProducts = [];
+        const notEnoughStockProducts = [];
 
-        for(let product of products){
+        for(let item of items){
 
-            total += product.price;
+            const product = await Product.findById(item.product);
 
-            if (product.stock <= 0) {
-                outOfStockProducts.push(product.name);  // Collect out-of-stock products
+            if (product.stock <  item.quantity) {
+                notEnoughStockProducts.push(product.name);  // Collect out-of-stock products
                 continue;  // Skip updating this product's stock
             }
 
-            product.stock -= 1;
+            total += product.price * item.quantity;
+
+            product.stock -= item.quantity;
+
+            await product.save();
 
         }
 
-        if (outOfStockProducts.length > 0) {
+        if (notEnoughStockProducts.length > 0) {
             // If there are out-of-stock products, throw an error with all their names
-            throw new Error(`The following products are out of stock: ${outOfStockProducts.join(', ')}. Please remove them from the cart and try again.`);
+            throw new Error(`Not enough stock for the following products: ${notEnoughStockProducts.join(', ')}. Please check the available stock and try again.`);
         }
 
         //There should be payment here
         const userId = user.id;
 
-        const productPromises = products.map(product => product.save());
-
-        await Promise.allSettled(productPromises);
-
-        const newOrder = new Order({user: userId, products, total});
+        const newOrder = new Order({user: userId, products: items, total});
 
         await newOrder.save();
 
@@ -85,6 +86,15 @@ async function cancelOrder(req, res) {
 
         if(!findOrder || !userId || !findOrder.user.equals(userId))
             throw new Error('This order doesn\'t exist');
+
+        for(const item of findOrder.products){
+
+            const product = await Product.findById(item.product);
+
+            product.stock += item.quantity;
+
+            await product.save();
+        }
 
         await Order.findByIdAndDelete(orderId);
 

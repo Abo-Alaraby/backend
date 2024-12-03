@@ -123,6 +123,8 @@ async function changeProduct(req, res){
 async function addProductToCart(req, res){
     const { cartId, productId } = req.params;
 
+    const userId = req.user.id;
+
     //Check if ids are valid
     if(!mongoose.Types.ObjectId.isValid(productId))
         return res.status(400).json({message: 'Invalid product ID.'});
@@ -135,20 +137,22 @@ async function addProductToCart(req, res){
 
         const targetProduct = await Product.findById(productId);
 
-        if(!targetCart) return res.status(404).json({message: 'Cart not found.'});
+        if(!targetCart || !targetCart.user.equals(userId)) return res.status(404).json({message: 'Cart not found.'});
 
         if(!targetProduct) return res.status(404).json({message: 'Product not found.'});
 
         let found = false;
+
         for(let i = 0; i < targetCart.products.length; i++)
-            if(targetCart.products[i]._id == productId){
+            if(targetCart.products[i].product.equals(productId)){
                 found = true;
+                targetCart.products[i].quantity++;
                 break;
             }
-        
-        if(found) return res.status(400).json({message: 'Product is already in cart.'});
 
-        targetCart.products.push(targetProduct);
+        if(!found) targetCart.products.push({ product: targetProduct._id, quantity: 1});
+
+        targetCart.markModified('products');
 
         targetCart.total += targetProduct.price;
         

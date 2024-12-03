@@ -37,10 +37,10 @@ function authorizeAdmin(req, res, next) {
     next();
 }
 
-async function generateToken(id, name, email){
+async function generateToken(id, name, email, role){
 
     const token = jwt.sign(
-        {id, email, name},
+        {id, email, name, role},
 
         SECRET_KEY,
 
@@ -72,7 +72,7 @@ async function login(req, res){
             if(!validPassword)
                 return res.status(401).json({ message: 'Invalid password' });
 
-            const token = await generateToken(admin.id, admin.firstName, admin.email);
+            const token = await generateToken(admin.id, admin.firstName, admin.email, "admin");
 
             res.cookie('jwt', token, {
                 maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -93,7 +93,7 @@ async function login(req, res){
             if(!validPassword)
                 return res.status(401).json({ message: 'Invalid password' });
             
-            const token = await generateToken(user._id, user.firstName, user.email);
+            const token = await generateToken(user._id, user.firstName, user.email, "user");
             
 
             res.cookie('jwt', token, {
@@ -142,7 +142,7 @@ async function signupUser(req, res){
         
         await newUser.save();
 
-        const token = await generateToken(newUser._id, newUser.firstName, newUser.email);
+        const token = await generateToken(newUser._id, newUser.firstName, newUser.email, "user");
         
 
         res.cookie('jwt', token, {
