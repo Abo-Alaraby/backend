@@ -23,9 +23,10 @@ const {
   changeProduct,
   addProductToCart,
   searchProducts,
+  getAllProducts,
 } = require("./APIs/Product-Service/product-controller");
 
-const {placeOrder, cancelOrder, viewOrder, getStatus, completeDelivery} = require('./APIs/Order-Service/order-controller');
+const { placeOrder, cancelOrder, viewOrder, getStatus, completeDelivery } = require("./APIs/Order-Service/order-controller");
 const { viewCart, clearCart, removeProductFromCart } = require("./APIs/Cart-Service/cart-controller");
 const { sendEmail } = require("./APIs/Notification-Service/mail");
 
@@ -51,6 +52,8 @@ app.post("/product/create", authenticate, authorizeAdmin, createProduct);
 
 app.get("/product/:id", viewProduct);
 
+app.get("/product", getAllProducts);
+
 app.delete("/product/:id", authenticate, authorizeAdmin, removeProduct);
 
 app.patch("/product/:id", authenticate, authorizeAdmin, changeProduct);
@@ -59,23 +62,23 @@ app.patch("/cart/:cartId/product/:productId", authenticate, addProductToCart);
 
 app.get("/products/search", searchProducts);
 
-app.post('/order', authenticate, placeOrder);
+app.post("/order", authenticate, placeOrder);
 
-app.delete('/order/:id', authenticate, cancelOrder);
+app.delete("/order/:id", authenticate, cancelOrder);
 
-app.get('/order/:id', authenticate, viewOrder);
+app.get("/order/:id", authenticate, viewOrder);
 
 //I think this should be removed, it is redundant
-app.get('/order/:id/status', authenticate, getStatus);
+app.get("/order/:id/status", authenticate, getStatus);
 
-app.patch('/order/:id', authenticate, completeDelivery);
+app.patch("/order/:id", authenticate, completeDelivery);
 
-app.get('/cart/:id', authenticate, viewCart);
+app.get("/cart/:id", authenticate, viewCart);
 
-app.delete('/cart/:id/product/:productId', authenticate, removeProductFromCart);
+app.delete("/cart/:id/product/:productId", authenticate, removeProductFromCart);
 
-app.delete('/cart/:id', authenticate, clearCart);
+app.delete("/cart/:id", authenticate, clearCart);
 
-app.post('/email', sendEmail);
+app.post("/email", sendEmail);
 
 app.listen(3000);
