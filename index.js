@@ -14,7 +14,9 @@ const cookieParser = require("cookie-parser");
 
 const app = express();
 
-const { login, signupUser, authenticate, authorizeAdmin } = require("./APIs/User-Service/auth");
+const { login, signupUser } = require("./APIs/User-Service/auth");
+
+const { authenticate, authorizeAdmin } = require("./Middleware/auth");
 
 const {
   createProduct,

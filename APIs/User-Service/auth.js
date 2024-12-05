@@ -10,36 +10,10 @@ require("dotenv").config();
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
-// Middleware to authenticate and authorize
-async function authenticate(req, res, next) {
-  const token = req.cookies.jwt || req.headers.authorization?.split(" ")[1];
 
-  if (!token) {
-    return res.status(401).json({ message: "Access denied. No token provided." });
-  }
-
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-
-    // Attach user data to the request for later use
-    req.user = decoded;
-
-    next(); // Proceed to the next middleware or route handler
-  } catch (error) {
-    return res.status(403).json({ message: "Invalid or expired token." });
-  }
-}
-
-function authorizeAdmin(req, res, next) {
-  if (req.user?.role !== "admin") {
-    return res.status(403).json({ message: "Access denied. Admins only." });
-  }
-  next();
-}
-
-async function generateToken(id, name, email) {
+async function generateToken(id, name, email, role) {
   const token = jwt.sign(
-    { id, email, name },
+    { id, email, name, role },
 
     SECRET_KEY,
 
@@ -66,7 +40,7 @@ async function login(req, res) {
 
       if (!validPassword) return res.status(401).json({ message: "Invalid password" });
 
-      const token = await generateToken(admin.id, admin.firstName, admin.email);
+      const token = await generateToken(admin.id, admin.firstName, admin.email, "admin");
 
       res.cookie("jwt", token, {
         maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -83,7 +57,7 @@ async function login(req, res) {
 
       if (!validPassword) return res.status(401).json({ message: "Invalid password" });
 
-      const token = await generateToken(user._id, user.firstName, user.email);
+      const token = await generateToken(user._id, user.firstName, user.email, "user");
 
       res.cookie("jwt", token, {
         maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -121,7 +95,7 @@ async function signupUser(req, res) {
 
     await newUser.save();
 
-    const token = await generateToken(newUser._id, newUser.firstName, newUser.email);
+    const token = await generateToken(newUser._id, newUser.firstName, newUser.email, "user");
 
     res.cookie("jwt", token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -134,4 +108,4 @@ async function signupUser(req, res) {
   }
 }
 
-module.exports = { login, signupUser, authenticate, authorizeAdmin };
+module.exports = { login, signupUser };
