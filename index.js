@@ -60,7 +60,7 @@ app.delete("/product/:id", authenticate, authorizeAdmin, removeProduct);
 
 app.patch("/product/:id", authenticate, authorizeAdmin, changeProduct);
 
-app.patch("/cart/:cartId/product/:productId", authenticate, addProductToCart);
+app.patch("/cart/:id", authenticate, addProductToCart);
 
 app.get("/products/search", searchProducts);
 

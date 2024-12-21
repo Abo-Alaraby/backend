@@ -106,28 +106,32 @@ async function changeProduct(req, res) {
 
 //IMPERATIVE PARADIGM
 async function addProductToCart(req, res) {
-  const { cartId, productId } = req.params;
+  const { id } = req.params;
 
   const userId = req.user.id;
 
-  //Check if ids are valid
-  if (!mongoose.Types.ObjectId.isValid(productId)) return res.status(400).json({ message: "Invalid product ID." });
-
-  if (!mongoose.Types.ObjectId.isValid(cartId)) return res.status(400).json({ message: "Invalid cart ID." });
+  //Check if id are valid
+  if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ message: "Invalid product ID." });
 
   try {
-    let targetCart = await Cart.findById(cartId);
+    let targetCart = await Cart.findOne({ user : userId });
 
-    const targetProduct = await Product.findById(productId);
+    const targetProduct = await Product.findById(id);
 
-    if (!targetCart || !targetCart.user.equals(userId)) return res.status(404).json({ message: "Cart not found." });
+    if (!targetCart) {
+      targetCart = new Cart({
+        user: userId,
+        products: [],
+        total: 0,
+      });
+    }
 
     if (!targetProduct) return res.status(404).json({ message: "Product not found." });
 
     let found = false;
 
     for (let i = 0; i < targetCart.products.length; i++)
-      if (targetCart.products[i].product.equals(productId)) {
+      if (targetCart.products[i].product.equals(id)) {
         found = true;
         targetCart.products[i].quantity++;
         break;
