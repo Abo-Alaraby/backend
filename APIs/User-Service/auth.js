@@ -34,22 +34,25 @@ async function userDetails(req, res) {
     const admin = await Admin.findOne({ email });
 
     if (admin) {
-      admin.password = undefined;
-      admin.createdAt = undefined;
-      admin.deletedAt = undefined;
-      admin.updatedAt = undefined;
-      admin.role = "admin";
-      return res.status(200).json(admin);
+      const adminObj = admin.toObject();
+      adminObj.password = undefined;
+      adminObj.createdAt = undefined;
+      adminObj.deletedAt = undefined;
+      adminObj.updatedAt = undefined;
+      adminObj.role = "admin";
+      return res.status(200).json(adminObj);
     }
 
     const user = await User.findOne({ email });
+
     if (user) {
-      user.password = undefined;
-      user.createdAt = undefined;
-      user.deletedAt = undefined;
-      user.updatedAt = undefined;
-      user.role = "user";
-      return res.status(200).json(user);
+      const userObj = user.toObject();
+      userObj.password = undefined;
+      userObj.createdAt = undefined;
+      userObj.deletedAt = undefined;
+      userObj.updatedAt = undefined;
+      userObj.role = "user";
+      return res.status(200).json(userObj);
     }
 
     return res.status(404).json({ message: `User not found with the specified email: ${email}` });
