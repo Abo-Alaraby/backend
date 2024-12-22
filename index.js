@@ -14,7 +14,7 @@ const cookieParser = require("cookie-parser");
 
 const app = express();
 
-const { login, signupUser } = require("./APIs/User-Service/auth");
+const { login, signupUser, signupAdmin, userDetails } = require("./APIs/User-Service/auth");
 
 const { authenticate, authorizeAdmin } = require("./Middleware/auth");
 
@@ -50,6 +50,10 @@ app.post("/user/login", login);
 
 app.post("/user/signup", signupUser);
 
+app.post("/admin/signup", signupAdmin);
+
+app.get("/user/me", authenticate, userDetails);
+
 app.post("/product/create", authenticate, authorizeAdmin, createProduct);
 
 app.get("/product/:id", viewProduct);
@@ -75,7 +79,7 @@ app.get("/order/:id/status", authenticate, getStatus);
 
 app.patch("/order/:id", authenticate, completeDelivery);
 
-app.get("/cart/:id", authenticate, viewCart);
+app.get("/cart", authenticate, viewCart);
 
 app.delete("/cart/:id/product/:productId", authenticate, removeProductFromCart);
 
