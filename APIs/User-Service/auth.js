@@ -32,13 +32,13 @@ async function userDetails(req, res) {
   const email = req.user.email;
   const admin = await Admin.findOne({ email }).select("-password -createdAt -deletedAt -updatedAt");
   if (admin) {
-    return res.status(200).json(admin);
+    return res.status(200).json({ user: admin, role: "admin" });
   }
   const user = await User.findOne({ email }).select("-password -createdAt -deletedAt -updatedAt");
   if (!user) {
     return res.status(404).json({ message: `user not found with email specified: ${email}` });
   }
-  return res.status(200).json(user);
+  return res.status(200).json({ user, role: "user" });
 }
 
 async function login(req, res) {

@@ -45,9 +45,9 @@ async function removeProductFromCart(req, res) {
   try {
     const userId = req.user.id;
 
-    const cart = await Cart.findById(cartId);
+    const cart = await Cart.findOne({ user: userId });
 
-    if (!cartId || !cart.user.equals(userId)) throw new Error("This cart doesn't exist");
+    if (!cart) throw new Error("This cart doesn't exist");
 
     const product = await Product.findById(productId);
 
@@ -80,22 +80,19 @@ async function removeProductFromCart(req, res) {
 }
 
 async function clearCart(req, res) {
-  const cartId = req.params.id;
-
   try {
     const userId = req.user.id;
 
-    const cart = await Cart.findById(cartId);
+    const cart = await Cart.findOne({ user: userId });
 
-    if (!cartId || !cart.user.equals(userId)) throw new Error("This cart doesn't exist");
+    if (!cart) throw new Error("This cart doesn't exist");
 
     cart.products = [];
-
     cart.total = 0;
 
     await cart.save();
 
-    return res.status(201).json(cart);
+    return res.status(200).json(cart);
   } catch (error) {
     return res.status(400).json(error.message);
   }

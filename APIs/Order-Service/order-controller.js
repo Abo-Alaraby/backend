@@ -143,4 +143,14 @@ async function completeDelivery(req, res) {
   }
 }
 
-module.exports = { cancelOrder, placeOrder, viewOrder, getStatus, completeDelivery };
+async function getAllOrders(req, res) {
+  try {
+    const userId = req.user.id;
+    const orders = await Order.find({ user: userId });
+    return res.status(200).json(orders);
+  } catch (error) {
+    return res.status(400).json(error.message);
+  }
+}
+
+module.exports = { getAllOrders, cancelOrder, placeOrder, viewOrder, getStatus, completeDelivery };
