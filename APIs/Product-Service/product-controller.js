@@ -1,7 +1,7 @@
 const Product = require("../../Database/Models/product-model");
 
 const Cart = require("../../Database/Models/cart-model");
-
+const { createCart } = require("../Cart-Service/cart-controller");
 const mongoose = require("mongoose");
 
 //DECLARATIVE PARADIGM
@@ -107,16 +107,12 @@ async function addProductToCart(req, res) {
   if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ message: "Invalid product ID." });
 
   try {
-    let targetCart = await Cart.findOne({ user : userId });
+    let targetCart = await Cart.findOne({ user: userId });
 
     const targetProduct = await Product.findById(id);
 
     if (!targetCart) {
-      targetCart = new Cart({
-        user: userId,
-        products: [],
-        total: 0,
-      });
+      createCart(userId, req.user.role);
     }
 
     if (!targetProduct) return res.status(404).json({ message: "Product not found." });

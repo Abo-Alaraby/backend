@@ -1,183 +1,146 @@
-const Order = require('../../Database/Models/order-model');
+const Order = require("../../Database/Models/order-model");
 
-const Product = require('../../Database/Models/product-model');
-
+const Product = require("../../Database/Models/product-model");
+const Cart = require("../../Database/Models/cart-model");
 //Will use it to update inventory later
-async function updateInventory(orderId) {
-
-
-}
-
+async function updateInventory(orderId) {}
 
 async function placeOrder(req, res) {
+  const user = req.user;
 
-    const user = req.user;
+  try {
+    if (!user) throw new Error("Please login to place an order");
 
+    const { items } = req.body;
 
-    try {
+    if (items.length == 0) throw new Error("Please add products to your cart first");
 
-        if(!user)
-            throw new Error('Please login to place an order');
+    let total = 0;
 
-        const {items} = req.body;
+    const notEnoughStockProducts = [];
 
-        if(items.length == 0)
-            throw new Error('Please add products to your cart first');
-        
-        let total = 0;
+    for (let item of items) {
+      const product = await Product.findById(item.product);
 
-        const notEnoughStockProducts = [];
+      if (product.stock < item.quantity) {
+        notEnoughStockProducts.push(product.name); // Collect out-of-stock products
+        continue; // Skip updating this product's stock
+      }
 
-        for(let item of items){
+      total += product.price * item.quantity;
 
-            const product = await Product.findById(item.product);
+      product.stock -= item.quantity;
 
-            if (product.stock <  item.quantity) {
-                notEnoughStockProducts.push(product.name);  // Collect out-of-stock products
-                continue;  // Skip updating this product's stock
-            }
-
-            total += product.price * item.quantity;
-
-            product.stock -= item.quantity;
-
-            await product.save();
-
-        }
-
-        if (notEnoughStockProducts.length > 0) {
-            // If there are out-of-stock products, throw an error with all their names
-            throw new Error(`Not enough stock for the following products: ${notEnoughStockProducts.join(', ')}. Please check the available stock and try again.`);
-        }
-
-        //There should be payment here
-        const userId = user.id;
-
-        const newOrder = new Order({user: userId, products: items, total});
-
-        await newOrder.save();
-
-
-        return res.status(201).json('Order placed successfully');
-
-    }catch(error){
-
-        return res.status(400).json(error.message);
-
+      await product.save();
     }
 
+    if (notEnoughStockProducts.length > 0) {
+      // If there are out-of-stock products, throw an error with all their names
+      throw new Error(
+        `Not enough stock for the following products: ${notEnoughStockProducts.join(", ")}. Please check the available stock and try again.`
+      );
+    }
+
+    //There should be payment here
+    const userId = user.id;
+    const cart = await Cart.findOne({ user: userId });
+    const newOrder = new Order({ user: userId, products: items, total });
+    cart.products = [];
+    cart.total = 0;
+    await cart.save();
+    await newOrder.save();
+
+    return res.status(201).json({ message: "Order placed successfully", orderId: newOrder._id });
+  } catch (error) {
+    return res.status(400).json(error.message);
+  }
 }
 
 async function cancelOrder(req, res) {
+  const user = req.user;
 
-    const user = req.user;
-    
-    try {
+  try {
+    //This case shouldn't happen anyway, but for redundant safety
+    if (!user) throw new Error("Please login first");
 
-        //This case shouldn't happen anyway, but for redundant safety
-        if(!user)
-            throw new Error('Please login first');
+    const userId = user.id;
 
-        const userId = user.id;
+    const orderId = req.params.id;
 
-        const orderId = req.params.id;
+    const findOrder = await Order.findById(orderId);
 
-        const findOrder = await Order.findById(orderId);
+    if (!findOrder || !userId || !findOrder.user.equals(userId)) throw new Error("This order doesn't exist");
 
-        if(!findOrder || !userId || !findOrder.user.equals(userId))
-            throw new Error('This order doesn\'t exist');
+    for (const item of findOrder.products) {
+      const product = await Product.findById(item.product);
 
-        for(const item of findOrder.products){
+      product.stock += item.quantity;
 
-            const product = await Product.findById(item.product);
-
-            product.stock += item.quantity;
-
-            await product.save();
-        }
-
-        await Order.findByIdAndDelete(orderId);
-
-        return res.status(200).json('Order deleted successfully')
-
-    }catch(error){
-
-        return res.status(400).json(error.message);
-
+      await product.save();
     }
+
+    await Order.findByIdAndDelete(orderId);
+
+    return res.status(200).json("Order deleted successfully");
+  } catch (error) {
+    return res.status(400).json(error.message);
+  }
 }
 
 //GET
 async function viewOrder(req, res) {
+  const orderId = req.params.id;
 
-    const orderId = req.params.id;
+  const userId = req.user.id;
 
-    const userId = req.user.id;
+  try {
+    const order = await Order.findById(orderId);
 
-    try{
+    if (!order || !order.user.equals(userId)) throw new Error("This order doesn't exist");
 
-        const order = await Order.findById(orderId);
-
-        if(!order || !order.user.equals(userId))
-            throw new Error('This order doesn\'t exist');
-
-        return res.status(200).json(order);
-
-    }catch(error){
-
-        return res.status(400).json(error.message);
-    }
+    return res.status(200).json(order);
+  } catch (error) {
+    return res.status(400).json(error.message);
+  }
 }
 
 //GET
 async function getStatus(req, res) {
+  const orderId = req.params.id;
 
-    const orderId = req.params.id;
+  const userId = req.user.id;
 
-    const userId = req.user.id;
+  try {
+    const order = await Order.findById(orderId);
 
-    try{
+    if (!order || !order.user.equals(userId)) throw new Error("This order doesn't exist");
 
-        const order = await Order.findById(orderId);
-
-        if(!order || !order.user.equals(userId))
-            throw new Error('This order doesn\'t exist');
-
-        return res.status(200).json(order.status);
-
-    }catch(error){
-
-        return res.status(400).json(error.message);
-    }
-
+    return res.status(200).json(order.status);
+  } catch (error) {
+    return res.status(400).json(error.message);
+  }
 }
 
 //PATCH
-async function completeDelivery(req, res){
+async function completeDelivery(req, res) {
+  const orderId = req.params.id;
 
-    const orderId = req.params.id;
+  const userId = req.user.id;
 
-    const userId = req.user.id;
+  try {
+    const order = await Order.findById(orderId);
 
-    try{
+    //The user cannot access this order
+    if (!order || !order.user.equals(userId)) throw new Error("This order doesn't exist");
 
-        const order = await Order.findById(orderId);
+    order.status = "Completed";
 
-        //The user cannot access this order
-        if(!order || !order.user.equals(userId))
-            throw new Error('This order doesn\'t exist');
+    await order.save();
 
-        order.status = 'Completed';
-
-        await order.save();
-
-        return res.status(201).json(order);
-
-    }catch(error){
-
-        return res.status(400).json(error.message);
-    }
-
+    return res.status(201).json(order);
+  } catch (error) {
+    return res.status(400).json(error.message);
+  }
 }
 
-module.exports = {cancelOrder, placeOrder, viewOrder, getStatus, completeDelivery};
+module.exports = { cancelOrder, placeOrder, viewOrder, getStatus, completeDelivery };

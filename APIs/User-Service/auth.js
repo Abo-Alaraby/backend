@@ -10,7 +10,6 @@ require("dotenv").config();
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
-
 async function generateToken(id, name, email, role) {
   const token = jwt.sign(
     { id, email, name, role },
@@ -27,6 +26,19 @@ async function validatePassword(passedPassword, storedPassword) {
   const response = await bcrypt.compare(passedPassword, storedPassword);
 
   return response;
+}
+
+async function userDetails(req, res) {
+  const email = req.user.email;
+  const admin = await Admin.findOne({ email }).select("-password -createdAt -deletedAt -updatedAt");
+  if (admin) {
+    return res.status(200).json(admin);
+  }
+  const user = await User.findOne({ email }).select("-password -createdAt -deletedAt -updatedAt");
+  if (!user) {
+    return res.status(404).json({ message: `user not found with email specified: ${email}` });
+  }
+  return res.status(200).json(user);
 }
 
 async function login(req, res) {
@@ -108,4 +120,39 @@ async function signupUser(req, res) {
   }
 }
 
-module.exports = { login, signupUser };
+async function signupAdmin(req, res) {
+  const { email, firstName, lastName, password, phone } = req.body;
+
+  try {
+    const existsAsAdmin = await Admin.findOne({ email });
+
+    if (existsAsAdmin) return res.status(400).json({ message: "Email is already in use" });
+
+    const existsAsUser = await User.findOne({ email });
+
+    if (existsAsUser) return res.status(400).json({ message: "Email is already in use" });
+
+    //Hash the password
+    const salt = await bcrypt.genSalt(13);
+
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newAdmin = new Admin({ email, firstName, lastName, password: hashedPassword, phone });
+
+    await newAdmin.save();
+
+    const token = await generateToken(newAdmin._id, newAdmin.firstName, newAdmin.email, "admin");
+
+    res.cookie("jwt", token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "Strict",
+    });
+
+    res.status(201).json({ message: "Signup successful, you'll be redirected to log in.", token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Signup failed, please try again later" });
+  }
+}
+
+module.exports = { login, signupUser, signupAdmin, userDetails };
