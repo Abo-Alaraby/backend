@@ -2,6 +2,7 @@ const request = require("supertest");
 const app = require("../index");  // Path to your Express app
 const { signupUser } = require("../APIs/User-Service/auth"); // Adjust the path to your authController
 const User = require("../Database/Models/user-model");
+const Admin = require("../Database/Models/admin-model");
 const Product = require("../Database/Models/product-model");
 const Cart = require("../Database/Models/cart-model");
 const jwt = require("jsonwebtoken");
@@ -306,6 +307,7 @@ it("should return 200 when adding a product to an existing cart", async () => {
     const cart = new Cart({
         user: "67684615d8c6cd8483b478bf",
         products: [{ product: product._id, quantity: 1 }],
+        userType: 'Admin',
         total: product.price,
     });
     Cart.deleteMany();
@@ -368,7 +370,8 @@ it("should return 200 when updating the quantity of a product in the cart", asyn
 
     const cart = new Cart({
         user: "67684615d8c6cd8483b478bf",
-        products: [{ product: product._id, quantity: 1 }, { product: product2._id, quantity: 1 }],
+        products: [{ product: product2._id, quantity: 1 },{ product: product._id, quantity: 1 }],
+        userType: 'Admin',
         total: product.price+product2.price,
     });
     Cart.deleteMany();
@@ -382,8 +385,58 @@ it("should return 200 when updating the quantity of a product in the cart", asyn
 
     expect(res.status).toBe(200);
     expect(res.body.products.length).toBe(2);
-    expect(res.body.products[0]).toHaveProperty("quantity", 2);
+    expect(res.body.products[1]).toHaveProperty("quantity", 2);
     expect(res.body).toHaveProperty("total", product.price * 2+product2.price);
 });
 
+describe("GET /user/me", () => {
+    it("should return 200 and user details for valid user", async () => {
+      jest.spyOn(Admin, "findOne").mockResolvedValueOnce(null);
+      
+      const res = await request(app)
+        .get("/user/me")
+        .set("Authorization", `Bearer ${token}`)
+        .send();
+
+      expect(res.status).toBe(200);
+      expect(res.body.email).toBe("testuser@example.com");
+      expect(res.body.firstName).toBe("Test");
+    });
+
+    it("should return 200 and admin details for valid admin", async () => {
+      const res = await request(app)
+        .get("/user/me")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send();
+
+      expect(res.status).toBe(200);
+      expect(res.body.email).toBe("admin@example.com");
+      expect(res.body.firstName).toBe("Test");
+    });
+
+    it("should return 404 if user is not found", async () => {
+      jest.spyOn(User, "findOne").mockResolvedValueOnce(null);
+      jest.spyOn(Admin, "findOne").mockResolvedValueOnce(null);
+
+      const res = await request(app)
+        .get("/user/me")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send();
+
+      expect(res.status).toBe(404);
+      expect(res.body.message).toBe("User not found with the specified email: admin@example.com");
+    });
+
+    it("should return 500 for server error during user details retrieval", async () => {
+      Admin.findOne.mockRejectedValue(new Error("Server error"));
+
+      const res = await request(app)
+        .get("/user/me")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send();
+
+      expect(res.status).toBe(500);
+      expect(res.body.message).toBe("Internal Server Error");
+    });
+  });
 });

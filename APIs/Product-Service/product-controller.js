@@ -112,7 +112,7 @@ async function addProductToCart(req, res) {
     const targetProduct = await Product.findById(id);
 
     if (!targetCart) {
-      createCart(userId, req.user.role);
+      targetCart = await createCart(userId, req.user.role);
     }
 
     if (!targetProduct) return res.status(404).json({ message: "Product not found." });

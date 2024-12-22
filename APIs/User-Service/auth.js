@@ -30,15 +30,30 @@ async function validatePassword(passedPassword, storedPassword) {
 
 async function userDetails(req, res) {
   const email = req.user.email;
-  const admin = await Admin.findOne({ email }).select("-password -createdAt -deletedAt -updatedAt");
-  if (admin) {
-    return res.status(200).json(admin);
+  try {
+    const admin = await Admin.findOne({ email })
+    
+    if (admin) {
+      admin.password = undefined;
+      admin.createdAt = undefined;
+      admin.deletedAt = undefined;
+      admin.updatedAt = undefined;
+      return res.status(200).json(admin);
+    }
+    
+    const user = await User.findOne({ email });
+    if (user) {
+      user.password = undefined;
+      user.createdAt = undefined;
+      user.deletedAt = undefined;
+      user.updatedAt = undefined;
+      return res.status(200).json(user);
+    }
+
+    return res.status(404).json({ message: `User not found with the specified email: ${email}` });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
   }
-  const user = await User.findOne({ email }).select("-password -createdAt -deletedAt -updatedAt");
-  if (!user) {
-    return res.status(404).json({ message: `user not found with email specified: ${email}` });
-  }
-  return res.status(200).json(user);
 }
 
 async function login(req, res) {

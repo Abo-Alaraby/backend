@@ -1,7 +1,7 @@
 const request = require("supertest");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const { login, signupUser } = require("../APIs/User-Service/auth");
+const { login, signupUser, signupAdmin, userDetails } = require("../APIs/User-Service/auth");
 const User = require("../Database/Models/user-model");
 const Admin = require("../Database/Models/admin-model");
 const app = require("../index"); // Import the Express app
@@ -14,6 +14,7 @@ jest.mock("../Database/Models/admin-model");
 describe("Authentication Service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
   });
 
   describe("POST /user/login", () => {
