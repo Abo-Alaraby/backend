@@ -1,6 +1,12 @@
 # Node.js
 node_modules/
 
+# Jest coverage reports
+coverage/
+
+# Jest cache
+jest-cache/
+
 # Logs
 logs
 *.log

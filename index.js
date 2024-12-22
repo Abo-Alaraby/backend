@@ -43,7 +43,7 @@ app.use(cookieParser());
 
 mongoose
   .connect("mongodb://127.0.0.1:27017/E-commerce")
-  .then(() => console.log("Connected to the database"))
+  .then()
   .catch((error) => console.error(error));
 
 app.post("/user/login", login);
@@ -83,4 +83,6 @@ app.delete("/cart/:id", authenticate, clearCart);
 
 app.post("/email", sendEmail);
 
-app.listen(3000);
+//app.listen(3000);
+
+module.exports = app;
