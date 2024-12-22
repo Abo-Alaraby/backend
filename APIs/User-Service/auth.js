@@ -170,7 +170,6 @@ async function signupAdmin(req, res) {
 
     res.status(201).json({ message: "Signup successful, you'll be redirected to log in.", token });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "Signup failed, please try again later" });
   }
 }
