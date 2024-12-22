@@ -28,7 +28,7 @@ const {
   getAllProducts,
 } = require("./APIs/Product-Service/product-controller");
 
-const { placeOrder, cancelOrder, viewOrder, getStatus, completeDelivery } = require("./APIs/Order-Service/order-controller");
+const { placeOrder, cancelOrder, viewOrder, getStatus, completeDelivery, getAllOrders } = require("./APIs/Order-Service/order-controller");
 const { viewCart, clearCart, removeProductFromCart } = require("./APIs/Cart-Service/cart-controller");
 const { sendEmail } = require("./APIs/Notification-Service/mail");
 
@@ -70,6 +70,8 @@ app.get("/products/search", searchProducts);
 
 app.post("/order", authenticate, placeOrder);
 
+app.get("/order", authenticate, getAllOrders);
+
 app.delete("/order/:id", authenticate, cancelOrder);
 
 app.get("/order/:id", authenticate, viewOrder);
@@ -81,9 +83,9 @@ app.patch("/order/:id", authenticate, completeDelivery);
 
 app.get("/cart", authenticate, viewCart);
 
-app.delete("/cart/:id/product/:productId", authenticate, removeProductFromCart);
+app.delete("/cart/product/:productId", authenticate, removeProductFromCart);
 
-app.delete("/cart/:id", authenticate, clearCart);
+app.delete("/cart", authenticate, clearCart);
 
 app.post("/email", sendEmail);
 
