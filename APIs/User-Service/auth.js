@@ -31,22 +31,24 @@ async function validatePassword(passedPassword, storedPassword) {
 async function userDetails(req, res) {
   const email = req.user.email;
   try {
-    const admin = await Admin.findOne({ email })
-    
+    const admin = await Admin.findOne({ email });
+
     if (admin) {
       admin.password = undefined;
       admin.createdAt = undefined;
       admin.deletedAt = undefined;
       admin.updatedAt = undefined;
+      admin.role = "admin";
       return res.status(200).json(admin);
     }
-    
+
     const user = await User.findOne({ email });
     if (user) {
       user.password = undefined;
       user.createdAt = undefined;
       user.deletedAt = undefined;
       user.updatedAt = undefined;
+      user.role = "user";
       return res.status(200).json(user);
     }
 
