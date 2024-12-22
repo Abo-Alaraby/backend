@@ -29,7 +29,6 @@ async function createProduct(req, res) {
 
     return res.status(201).json(success);
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -46,8 +45,6 @@ async function viewProduct(req, res) {
 
     return product ? res.status(200).json(product) : res.status(404).json({ message: "Product not found." });
   } catch (err) {
-    console.log(err);
-
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -64,8 +61,6 @@ async function removeProduct(req, res) {
 
     return product ? res.status(200).json({ message: "Product successfully deleted." }) : res.status(404).json({ message: "Product not found." });
   } catch (err) {
-    console.log(err);
-
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -98,9 +93,7 @@ async function changeProduct(req, res) {
 
     return res.status(200).json(success);
   } catch (err) {
-    console.log(err);
-
-    return res.status(500).json({ message: "Internal Server Error." });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
@@ -125,13 +118,13 @@ async function addProductToCart(req, res) {
     if (!targetProduct) return res.status(404).json({ message: "Product not found." });
 
     let found = false;
-
+    
     for (let i = 0; i < targetCart.products.length; i++)
-      if (targetCart.products[i].product.equals(id)) {
+      if (targetCart.products[i].product.equals(targetProduct._id)) {
         found = true;
         targetCart.products[i].quantity++;
         break;
-      }
+      }    
 
     if (!found) targetCart.products.push({ product: targetProduct._id, quantity: 1 });
 
@@ -143,9 +136,7 @@ async function addProductToCart(req, res) {
 
     return res.status(200).json(success);
   } catch (err) {
-    console.log(err);
-
-    return res.status(500).json({ message: "Internal Server Error." });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
@@ -164,8 +155,6 @@ async function searchProducts(req, res) {
 
     return result.length ? res.status(200).json(result) : res.status(404).json({ message: "No matching results." });
   } catch (err) {
-    console.log(err);
-
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
