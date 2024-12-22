@@ -168,4 +168,66 @@ describe("Authentication Service", () => {
       expect(res.body.message).toBe("Signup failed, please try again later");
     });
   });
+
+  describe("POST /admin/signup", () => {
+    it("should return 201 and a token for successful admin signup", async () => {
+      const mockAdmin = { id: "1", email: "newadmin@test.com", firstName: "Admin", save: jest.fn() };
+      Admin.findOne.mockResolvedValue(null);
+      User.findOne.mockResolvedValue(null);
+      bcrypt.hash.mockResolvedValue("hashedpassword");
+      jwt.sign.mockReturnValue("mockToken");
+
+      Admin.mockImplementation(() => mockAdmin);
+
+      const res = await request(app).post("/admin/signup").send({
+        email: "newadmin@test.com",
+        password: "password",
+        firstName: "Admin",
+        lastName: "Test",
+        phone: "1234567890",
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.body.token).toBe("mockToken");
+      expect(Admin).toHaveBeenCalled();
+    });
+
+    it("should return 400 for existing admin email", async () => {
+      Admin.findOne.mockResolvedValue({ email: "existingadmin@test.com" });
+
+      const res = await request(app).post("/admin/signup").send({
+        email: "existingadmin@test.com",
+        password: "password",
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe("Email is already in use");
+    });
+
+    it("should return 400 if email exists as user", async () => {
+      User.findOne.mockResolvedValue({ email: "user@test.com" });
+
+      const res = await request(app).post("/admin/signup").send({
+        email: "user@test.com",
+        password: "password",
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe("Email is already in use");
+    });
+
+    it("should return 500 for server error during admin signup", async () => {
+      Admin.findOne.mockRejectedValue(new Error("Server error"));
+
+      const res = await request(app).post("/admin/signup").send({
+        email: "adminerror@test.com",
+        password: "password",
+        firstName: "Admin",
+        lastName: "Test",
+      });
+
+      expect(res.status).toBe(500);
+      expect(res.body.message).toBe("Signup failed, please try again later");
+    });
+  });
 });
