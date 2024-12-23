@@ -1,9 +1,24 @@
 const Order = require("../../Database/Models/order-model");
-
 const Product = require("../../Database/Models/product-model");
 const Cart = require("../../Database/Models/cart-model");
-//Will use it to update inventory later
-async function updateInventory(orderId) {}
+// Add RabbitMQ setup
+const amqp = require('amqplib/callback_api');
+let channel = null;
+const queue = 'orderQueue';
+amqp.connect('amqp://localhost', function(error0, connection) {
+  if (error0) {
+    throw error0;
+  }
+  connection.createChannel(function(error1, ch) {
+    if (error1) {
+      throw error1;
+    }
+    channel = ch;
+    channel.assertQueue(queue, {
+      durable: false
+    });
+  });
+});
 
 async function placeOrder(req, res) {
   const user = req.user;
@@ -50,9 +65,14 @@ async function placeOrder(req, res) {
     await cart.save();
     await newOrder.save();
 
+    // Publish message to RabbitMQ
+    const orderMessage = JSON.stringify({ orderId: newOrder._id, userId, items, total, action: "place" });
+    channel.sendToQueue(queue, Buffer.from(orderMessage));
+
     return res.status(201).json({ message: "Order placed successfully", orderId: newOrder._id });
   } catch (error) {
-    return res.status(400).json(error.message);
+    console.log(error);
+    return res.status(500).json(error.message);
   }
 }
 
@@ -79,7 +99,10 @@ async function cancelOrder(req, res) {
       await product.save();
     }
 
-    await Order.findByIdAndDelete(orderId);
+
+    // Publish cancel message to RabbitMQ
+    const cancelMessage = JSON.stringify({ orderId, userId, action: "cancel" });
+    channel.sendToQueue(queue, Buffer.from(cancelMessage));
 
     return res.status(200).json("Order deleted successfully");
   } catch (error) {

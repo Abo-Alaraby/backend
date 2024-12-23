@@ -32,6 +32,9 @@ const { placeOrder, cancelOrder, viewOrder, getStatus, completeDelivery, getAllO
 const { viewCart, clearCart, removeProductFromCart } = require("./APIs/Cart-Service/cart-controller");
 const { sendEmail } = require("./APIs/Notification-Service/mail");
 
+require('./APIs/Order-Service/order-consumer');
+
+app.listen(3000);
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -88,7 +91,5 @@ app.delete("/cart/product/:productId", authenticate, removeProductFromCart);
 app.delete("/cart", authenticate, clearCart);
 
 app.post("/email", sendEmail);
-
-//app.listen(3000);
 
 module.exports = app;
